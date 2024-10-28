@@ -145,7 +145,7 @@ mostrar_actividades([(NombreActividad, Costo, Duracion, DescripcionActividad, Ti
     write('  - Actividad: '), write(NombreActividad), nl,
     write('    Descripcion: '), write(DescripcionActividad), nl,
     write('    Costo: $'), write(Costo), nl,
-    write('    Duracion: '), write(Duracion), write(' dias'), nl,
+    write('    Duracion: '), write(Duracion), write(' horas'), nl,
     write('    Tipos: '), write(Tipos), nl, nl,
     mostrar_actividades(Resto).
 
@@ -438,7 +438,7 @@ mostrar_resultados([]) :-  % Caso base: no hay resultados
 mostrar_resultados(Resultados) :-  % Caso cuando hay resultados
     writeln('Actividades encontradas:'),  % Mensaje de actividades encontradas
     forall(member((Actividad, Costo, Duracion, Descripcion, Destino), Resultados),
-           format('Actividad: ~w, Costo: ~d, Duración: ~d días, Descripción: ~s, Destino: ~w~n',
+           format('Actividad: ~w, Costo: ~d, Duración: ~d dias, Descripcion: ~s, Destino: ~w~n',
                   [Actividad, Costo, Duracion, Descripcion, Destino])).  % Formato de salida para cada actividad
 
 % Sugerir tipo similar
@@ -531,7 +531,7 @@ mostrar_resultados([]) :-  % Caso base: no hay resultados
 mostrar_resultados(Resultados) :-  % Caso cuando hay resultados
     writeln('Actividades encontradas:'),  % Mensaje de actividades encontradas
     forall(member((Actividad, Costo, Duracion, Descripcion, Destino), Resultados),
-           format('Actividad: ~w, Costo: ~d, Duración: ~d días, Descripción: ~s, Destino: ~w~n',
+           format('Actividad: ~w, Costo: ~d, Duracion: ~d días, Descripcion: ~s, Destino: ~w~n',
                   [Actividad, Costo, Duracion, Descripcion, Destino])).  % Formato de salida para cada actividad
 
 % Sugerir tipo similar
@@ -586,13 +586,13 @@ mostrar_sugerencias(Tipos) :-
 consulta_por_precio :-
     writeln('Ingrese el monto:'),
     read(Monto),  % Leer el monto ingresado por el usuario
-    writeln('¿Desea consultar actividades más baratas o más caras?'),
+    writeln('¿Desea consultar actividades mas baratas o mas caras?'),
     writeln('1. Más baratas'),
     writeln('2. Más caras'),
     read(Opcion),  % Leer la opción elegida por el usuario
-    (   (Opcion = 1 -> mostrar_actividades_mas_baratas(Monto)  % Si elige mas baratas
-    ;   Opcion = 2 -> mostrar_actividades_mas_caras(Monto)  % Si elige mas caras
-    ;   writeln('Opción no válida, regresando al menú.'), menu)  % Manejo de opción no válida
+    (   (Opcion = 1 -> mostrar_actividades_mas_baratas(Monto)  % Si elige más baratas
+    ;   Opcion = 2 -> mostrar_actividades_mas_caras(Monto)  % Si elige más caras
+    ;   writeln('Opcion no valida, regresando al menu.'), menu)  % Manejo de opción no válida
     ).
 
 % Mostrar actividades mas baratas
