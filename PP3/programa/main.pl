@@ -47,7 +47,8 @@ menu_operativas :-
 menu_operativas(1) :-
     menu_agregar_hechos.
 menu_operativas(2) :-
-    write('Funcion para consultar destino.'), nl,
+    solicitar_nombre_destino(Destino),
+    consultar_destino(Destino),
     menu_operativas.
 menu_operativas(3) :-
     actividades_por_tipo_menu.
@@ -58,13 +59,12 @@ menu_operativas(5) :-
     write('Funcion para generar itinerario por monto.'), nl,
     menu_operativas.
 menu_operativas(6) :-
-    write('Funcion para generar itinerario por dias.'), nl,
-    menu_operativas.
+    generar_itinerario_dias.
 menu_operativas(7) :-
     write('Funcion para recomendar por frase.'), nl,
     menu_operativas.
 menu_operativas(8) :-
-    write('Funcion para mostrar estadisticas.'), nl,
+    estadistica,
     menu_operativas.
 menu_operativas(9) :-
     menu_principal.
