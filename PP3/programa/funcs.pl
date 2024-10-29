@@ -644,26 +644,46 @@ mostrar_actividades_mas_caras(Monto) :-
  *****Retorno***************************************
  * Muestra actividades que coinciden con las palabras clave de la frase ingresada.
  ***************************************************/
-recomendar_por_frase :-
-    writeln('Ingrese una frase para recomendar actividades:'),nl,
+recomendar_por_frase :- 
+    writeln('Ingrese una frase para recomendar actividades:'),
     read_line_to_string(user_input, Frase),  % Leer la frase ingresada por el usuario
-    atomic_list_concat(PalabrasClave, ' ', Frase),  % Convertir la frase en una lista de palabras
-    filtrar_articulos(PalabrasClave, PalabrasFiltradas),  % Filtrar artículos
-    encontrar_actividades(PalabrasFiltradas, ActividadesCoincidentes),  % Buscar actividades que coinciden
-    mostrar_actividades_coincidentes(ActividadesCoincidentes).  % Mostrar actividades encontradas
+    % Extraer palabras clave de la frase, ignorando artículos.
+    split_string(Frase, " ", "", Palabras),
+    % Filtrar palabras relevantes, omitiendo artículos.
+    exclude(articulo, Palabras, PalabrasClave),
+    
+    % Buscar actividades que coincidan con las palabras clave.
+    findall((Actividad, Costo, Duracion, Descripcion, Tipos, Destino),
+            (actividad(Actividad, Costo, Duracion, Descripcion, Tipos),
+             member(Palabra, PalabrasClave),
+             (sub_string(Descripcion, _, _, _, Palabra) ;  % Coincidencia en descripción
+              member(Palabra, Tipos)),  % Coincidencia en tipos
+             asociar_actividad(Destino, Actividad)),  % Obtener el destino asociado
+            ActividadesEncontradas),
+
+    % Eliminar duplicados en actividades encontradas
+    list_to_set(ActividadesEncontradas, ActividadesSinRepetir),
+
+    % Mostrar resultados
+    mostrar_resultados(ActividadesSinRepetir).
 
 /*****Nombre****************************************
- * filtrar_articulos
+ * mostrar_resultados
  *****Descripción***********************************
- * Filtra artículos comunes de una lista de palabras.
+ * Muestra los resultados
  *****Parámetros************************************
- * @Palabras: Lista de palabras originales.
- * @PalabrasFiltradas: Lista de palabras sin artículos.
+ * actividades y destinos
  *****Retorno***************************************
- * Lista de palabras sin artículos.
+ * Destinos encontrados
  ***************************************************/
-filtrar_articulos(Palabras, PalabrasFiltradas) :-
-    exclude(articulo, Palabras, PalabrasFiltradas).  % Excluye palabras que son artículos
+mostrar_resultados(Actividades) :-
+    (   Actividades \= [] -> 
+        writeln('Actividades encontradas:'),
+        forall(member((Actividad, Costo, Duracion, Descripcion, Tipos, Destino), Actividades),
+               format('Actividad: ~w, Costo: ~d, Duracion: ~d dias, Descripcion: ~s, Tipos: ~w, Destino: ~w~n',
+                      [Actividad, Costo, Duracion, Descripcion, Tipos, Destino]));
+        writeln('No se encontraron actividades.')
+    ).
 
 /*****Nombre****************************************
  * articulo
@@ -674,65 +694,5 @@ filtrar_articulos(Palabras, PalabrasFiltradas) :-
  *****Retorno***************************************
  * Retorna true si es un artículo, false en caso contrario.
  ***************************************************/
-articulo(Palabra) :-
-    member(Palabra, [a, an, the, el, la, los, las, un, una]).  % Lista de artículos comunes
+articulo(X) :- member(X, ['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'de', 'en', 'a', 'y', 'o']).
 
-/*****Nombre****************************************
- * encontrar_actividades
- *****Descripción***********************************
- * Busca actividades que coinciden con las palabras clave.
- *****Parámetros************************************
- * @Palabras: Lista de palabras clave a buscar.
- * @ActividadesCoincidentes: Lista de actividades que coinciden.
- *****Retorno***************************************
- * Lista de actividades que hacen match con las palabras clave.
- ***************************************************/
-encontrar_actividades(Palabras, ActividadesCoincidentes) :-
-    findall((Actividad, Costo, Duracion, Descripcion, Destino),
-            (actividad(Actividad, Costo, Duracion, Descripcion, _),
-             match_frase(Palabras, Descripcion)),  % Verificar coincidencia en la descripción de la actividad
-            ActividadesPorActividad),
-    findall((Actividad, Costo, Duracion, Descripcion, Destino),
-            (destino(Destino, DescripcionDestino),
-             match_frase(Palabras, DescripcionDestino),  % Verificar coincidencia en la descripción de destino
-             actividad(Actividad, Costo, Duracion, _, _)),  % Obtener actividad correspondiente
-            ActividadesPorDestino),
-    findall((Actividad, Costo, Duracion, Descripcion, Destino),
-            (asociar_actividad(Destino, Actividad),
-             destino(Destino, DescripcionDestino),
-             match_frase(Palabras, DescripcionDestino)),  % Verificar coincidencia en destinos asociados
-            ActividadesPorAsociacion),
-    append(ActividadesPorActividad, ActividadesPorDestino, ActividadesCoincidentesParciales),  % Unir listas de actividades
-    append(ActividadesCoincidentesParciales, ActividadesPorAsociacion, ActividadesCoincidentes).  % Unir todas las actividades
-
-/*****Nombre****************************************
- * match_frase
- *****Descripción***********************************
- * Comprueba si alguna de las palabras clave se encuentra en la descripción dada.
- *****Parámetros************************************
- * @Palabras: Lista de palabras clave.
- * @Descripcion: Descripción donde se busca coincidencias.
- *****Retorno***************************************
- * Retorna true si hay coincidencias, false en caso contrario.
- ***************************************************/
-match_frase(Palabras, Descripcion) :-
-    atomic_list_concat(DescripcionLista, ' ', Descripcion),  % Convertir la descripción en lista de palabras
-    member(Palabra, Palabras),  % Iterar sobre las palabras clave
-    member(Palabra, DescripcionLista).  % Verificar si la palabra clave está en la descripción
-
-/*****Nombre****************************************
- * mostrar_actividades_coincidentes
- *****Descripción***********************************
- * Muestra las actividades que coinciden con las palabras clave de la frase.
- *****Parámetros************************************
- * @ActividadesCoincidentes: Lista de actividades encontradas.
- *****Retorno***************************************
- * Muestra las actividades que coinciden.
- ***************************************************/
-mostrar_actividades_coincidentes([]) :-
-    writeln('No se encontraron actividades que coincidan con la frase ingresada.').
-mostrar_actividades_coincidentes(Actividades) :-
-    writeln('Actividades encontradas:'),
-    forall(member((Actividad, Costo, Duracion, Descripcion, Destino), Actividades),
-           format('Actividad: ~w, Costo: ~d, Duracion: ~d dias, Descripcion: ~s, Destino: ~w~n',
-                  [Actividad, Costo, Duracion, Descripcion, Destino])).
