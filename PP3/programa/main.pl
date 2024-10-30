@@ -61,7 +61,7 @@ menu_operativas(5) :-
 menu_operativas(6) :-
     generar_itinerario_dias.
 menu_operativas(7) :-
-    write('Funcion para recomendar por frase.'), nl,
+    recomendar_por_frase,
     menu_operativas.
 menu_operativas(8) :-
     estadistica,
@@ -113,7 +113,7 @@ menu_agregar_hechos(_) :-
 
 % Menú para actividades por tipo
 actividades_por_tipo_menu :-
-    writeln('Ingrese el tipo de actividad:'),
+    writeln('Ingrese el tipo de actividad 123:'),
     read(Tipo),
     actividades_por_tipo(Tipo),  % Llamar al predicado con el tipo ingresado
     menu_operativas.

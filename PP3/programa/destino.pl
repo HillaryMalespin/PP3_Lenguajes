@@ -1,5 +1,4 @@
 :- dynamic(destino/2).
-% Base de Conocimiento
 % destino/2: destino(Atomo, Descripcion)
 % Definición de destinos con nombre y descripción.
 destino(paris, 'Ciudad de la Luz').

@@ -1,7 +1,4 @@
 :- dynamic(afinidad/2).
-
-% Afinidades entre categorías
-% Cada una de las reglas establece una relacion entre categorías.
 afinidad(arte, cultura).
 afinidad(cultura, arte).
 afinidad(historia, arquitectura).

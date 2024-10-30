@@ -178,6 +178,33 @@ generar_itinerario_dias :-
     write('Duracion ingresada: '), write(Duracion), nl,
     write('Categoria preferida: '), write(CategoriaPreferida), nl.
 
+% Generar itinerario por días
+itinerario_por_dias :-
+    write('Ingrese la cantidad máxima de días: '),
+    read(MaxDias),
+    write('Ingrese la categoría de preferencia: '),
+    read(Categoria),
+    generar_itinerario_dias(MaxDias, Categoria, 1, Itinerario),
+    mostrar_itinerario(Itinerario),
+    write('¿Desea generar otro itinerario? (s/n): '),
+    read(Respuesta),
+    (Respuesta = s ->
+        generar_itinerario_dias(MaxDias, Categoria, 2, NuevoItinerario),
+        mostrar_itinerario(NuevoItinerario)
+    ; true).
+
+generar_itinerario_dias(MaxDias, Categoria, Criterio, Itinerario) :-
+    findall(act(Nombre, Costo, Duracion, Tipos),
+            actividad(Nombre, Costo, Duracion, _, Tipos),
+            TodasActividades),
+    % Criterio 1: Prioriza duración, Criterio 2: Prioriza variedad de tipos
+    (Criterio = 1 ->
+        ordenar_por_duracion(TodasActividades, ActividadesOrdenadas)
+    ;
+        ordenar_por_variedad_tipos(TodasActividades, ActividadesOrdenadas)
+    ),
+    seleccionar_actividades_dias(ActividadesOrdenadas, MaxDias, Categoria, [], Itinerario).
+
 /*-------------------------------------------------------------*/
 
 /*****Nombre****************************************
@@ -398,6 +425,7 @@ categoria_mas_frecuente([Categoria-Cantidad|Resto], CategoriaMasFrecuente, MaxCa
 %
 % Entrada: Ninguna
 % Salida: Muestra actividades por tipo o sugerencias si no se encuentra el tipo.
+/*
 actividades_por_tipo_menu :-
     writeln('Ingrese el tipo de actividad:'),
     read(Tipo),  % Leer tipo de actividad ingresado por el usuario
@@ -436,9 +464,9 @@ actividades_por_tipo(Tipo) :-
 mostrar_resultados([]) :-  % Caso base: no hay resultados
     writeln('No se encontraron actividades de este tipo.').  % Mensaje cuando no hay actividades
 mostrar_resultados(Resultados) :-  % Caso cuando hay resultados
-    writeln('Actividades encontradas:'),  % Mensaje de actividades encontradas
+    writeln('Actividades encontradas 123:'),  % Mensaje de actividades encontradas
     forall(member((Actividad, Costo, Duracion, Descripcion, Destino), Resultados),
-           format('Actividad: ~w, Costo: ~d, Duración: ~d dias, Descripcion: ~s, Destino: ~w~n',
+           format('Actividad: ~w, Costo: ~d, Duracion: ~d dias, Descripcion: ~s, Destino: ~w~n',
                   [Actividad, Costo, Duracion, Descripcion, Destino])).  % Formato de salida para cada actividad
 
 % Sugerir tipo similar
@@ -499,7 +527,7 @@ actividades_por_tipo_menu :-
     ;   sugerir_tipo(Tipo),  % Si no se encuentran, se sugieren tipos
         menu  % Regresar al menú después de sugerir
     ).
-
+*/
 % Predicado para mostrar actividades por tipo
 % actividades_por_tipo/1
 % Busca y muestra todas las actividades de un tipo específico.
@@ -526,6 +554,7 @@ actividades_por_tipo(Tipo) :-
 %
 % Entrada: Resultados de actividades.
 % Salida: Mensajes que indican las actividades encontradas o que no se encontraron.
+/*
 mostrar_resultados([]) :-  % Caso base: no hay resultados
     writeln('No se encontraron actividades de este tipo.').  % Mensaje cuando no hay actividades
 mostrar_resultados(Resultados) :-  % Caso cuando hay resultados
@@ -533,7 +562,7 @@ mostrar_resultados(Resultados) :-  % Caso cuando hay resultados
     forall(member((Actividad, Costo, Duracion, Descripcion, Destino), Resultados),
            format('Actividad: ~w, Costo: ~d, Duracion: ~d días, Descripcion: ~s, Destino: ~w~n',
                   [Actividad, Costo, Duracion, Descripcion, Destino])).  % Formato de salida para cada actividad
-
+*/
 % Sugerir tipo similar
 % sugerir_tipo/1
 % Sugerir tipos de actividad similares si el tipo ingresado no existe en la base de conocimiento.
@@ -605,7 +634,7 @@ consulta_por_precio :-
 % Entrada: Monto
 % Salida: Muestra las actividades que son mas baratas que el monto.
 mostrar_actividades_mas_baratas(Monto) :-
-    findall((Actividad, Costo, Duracion, Descripcion, Destino),
+    findall((Actividad, Costo, Duracion, Descripcion, _),
             (actividad(Actividad, Costo, Duracion, Descripcion, _),
              Costo < Monto),  % Filtrar actividades mas baratas
             Resultados),  % Almacena resultados en la lista
@@ -621,7 +650,7 @@ mostrar_actividades_mas_baratas(Monto) :-
 % Entrada: Monto
 % Salida: Muestra las actividades que son mas caras que el monto.
 mostrar_actividades_mas_caras(Monto) :-
-    findall((Actividad, Costo, Duracion, Descripcion, Destino),
+    findall((Actividad, Costo, Duracion, Descripcion, _),
             (actividad(Actividad, Costo, Duracion, Descripcion, _),
              Costo > Monto),  % Filtrar actividades mas caras
             Resultados),  % Almacena resultados en la lista
@@ -645,8 +674,11 @@ mostrar_actividades_mas_caras(Monto) :-
  * Muestra actividades que coinciden con las palabras clave de la frase ingresada.
  ***************************************************/
 recomendar_por_frase :- 
+    skip(10),
     writeln('Ingrese una frase para recomendar actividades:'),
     read_line_to_string(user_input, Frase),  % Leer la frase ingresada por el usuario
+    
+    %solicitar_frase(Frase),
     % Extraer palabras clave de la frase, ignorando artículos.
     split_string(Frase, " ", "", Palabras),
     % Filtrar palabras relevantes, omitiendo artículos.

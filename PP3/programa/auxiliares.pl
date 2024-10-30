@@ -130,6 +130,15 @@ solicitar_descripcion_actividad(Descripcion) :-
         solicitar_descripcion_actividad(Descripcion)
     ).
 
+solicitar_frase(Frase) :-
+    write('Ingrese una frase para recomendar actividades: (cadena): '), nl,
+    read_line_to_string(Input),
+    (   validar_string(Input) ->
+        Frase = Input
+    ;   write('Error: La frase debe ser una cadena.'), nl,
+        solicitar_frase(Frase)
+    ).
+
 /*****Nombre****************************************
  * solicitar_tipos
  *****Descripción***********************************
