@@ -553,7 +553,6 @@ mostrar_resultados_actividades(Resultados) :-  % Caso cuando hay resultados
 ------------------------------------------------consultar-por-precio------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------
 */
-
 % Consulta por precio
 % consulta_por_precio/0
 % Permite al usuario consultar actividades en función de un monto.
@@ -564,8 +563,8 @@ consulta_por_precio :-
     writeln('Ingrese el monto:'),
     read(Monto),  % Leer el monto ingresado por el usuario
     writeln('¿Desea consultar actividades mas baratas o mas caras?'),
-    writeln('1. Más baratas'),
-    writeln('2. Más caras'),
+    writeln('1. Mas baratas'),
+    writeln('2. Mas caras'),
     read(Opcion),  % Leer la opción elegida por el usuario
     (   (Opcion = 1 -> mostrar_actividades_mas_baratas(Monto)  % Si elige más baratas
     ;   Opcion = 2 -> mostrar_actividades_mas_caras(Monto)  % Si elige más caras
@@ -582,11 +581,13 @@ consulta_por_precio :-
 % Entrada: Monto
 % Salida: Muestra las actividades que son mas baratas que el monto.
 mostrar_actividades_mas_baratas(Monto) :-
-    findall((Actividad, Costo, Duracion, Descripcion, _),
-            (actividad(Actividad, Costo, Duracion, Descripcion, _),
+    findall((Actividad, Costo, Duracion, Descripcion, Tipos, Destino),
+            (actividad(Actividad, Costo, Duracion, Descripcion, Tipos),
+             asociar_actividad(Destino, Actividad),
              Costo < Monto),  % Filtrar actividades mas baratas
             Resultados),  % Almacena resultados en la lista
     mostrar_resultados(Resultados).  % Muestra los resultados encontrados
+
 
 % Mostrar actividades mas caras
 % mostrar_actividades_mas_caras/1
@@ -598,8 +599,9 @@ mostrar_actividades_mas_baratas(Monto) :-
 % Entrada: Monto
 % Salida: Muestra las actividades que son mas caras que el monto.
 mostrar_actividades_mas_caras(Monto) :-
-    findall((Actividad, Costo, Duracion, Descripcion, _),
-            (actividad(Actividad, Costo, Duracion, Descripcion, _),
+    findall((Actividad, Costo, Duracion, Descripcion, Tipos, Destino),
+            (actividad(Actividad, Costo, Duracion, Descripcion, Tipos),
+             asociar_actividad(Destino, Actividad),
              Costo > Monto),  % Filtrar actividades mas caras
             Resultados),  % Almacena resultados en la lista
     mostrar_resultados(Resultados).  % Muestra los resultados encontrados
