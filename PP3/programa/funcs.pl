@@ -170,42 +170,130 @@ calcular_totales([(_, Costo, Duracion, _, _)|Resto], TiempoTotal, CostoTotal) :-
     TiempoTotal is TiempoResto + Duracion,
     CostoTotal is CostoResto + Costo.
 
-/*-------------------------------------------------------------*/
-
+/*****Nombre****************************************
+ * generar_itinerario_dias
+ *****Descripción***********************************
+ * Carga las actividades desde un archivo, solicita al usuario
+ * la duración máxima y la categoría preferida, genera un itinerario
+ * basado en esos parámetros y pregunta al usuario si está satisfecho
+ * con el itinerario generado.
+ *****Parámetros************************************
+ * No tiene parámetros.
+ *****Retorno***************************************
+ * No retorna un valor; llama a otras funciones que muestran resultados en
+ * la salida estándar y gestiona la interacción con el usuario.
+ ***************************************************/
 generar_itinerario_dias :-
+    consult('actividad.pl'),
     solicitar_duracion(Duracion),
     solicitar_categoria(CategoriaPreferida),
-    write('Duracion ingresada: '), write(Duracion), nl,
-    write('Categoria preferida: '), write(CategoriaPreferida), nl.
-
-% Generar itinerario por días
-itinerario_por_dias :-
-    write('Ingrese la cantidad máxima de días: '),
-    read(MaxDias),
-    write('Ingrese la categoría de preferencia: '),
-    read(Categoria),
-    generar_itinerario_dias(MaxDias, Categoria, 1, Itinerario),
+    generar_itinerario_aux(Duracion, CategoriaPreferida, Itinerario, DuracionTotal),
+    write('Itinerario sugerido:'), nl,
     mostrar_itinerario(Itinerario),
-    write('¿Desea generar otro itinerario? (s/n): '),
-    read(Respuesta),
-    (Respuesta = s ->
-        generar_itinerario_dias(MaxDias, Categoria, 2, NuevoItinerario),
-        mostrar_itinerario(NuevoItinerario)
-    ; true).
+    write('Duracion total del itinerario: '), write(DuracionTotal), write(' dias'), nl, nl,
+    preguntar_satisfaccion(DuracionTotal, CategoriaPreferida).
 
-generar_itinerario_dias(MaxDias, Categoria, Criterio, Itinerario) :-
-    findall(act(Nombre, Costo, Duracion, Tipos),
-            actividad(Nombre, Costo, Duracion, _, Tipos),
-            TodasActividades),
-    % Criterio 1: Prioriza duración, Criterio 2: Prioriza variedad de tipos
-    (Criterio = 1 ->
-        ordenar_por_duracion(TodasActividades, ActividadesOrdenadas)
-    ;
-        ordenar_por_variedad_tipos(TodasActividades, ActividadesOrdenadas)
-    ),
-    seleccionar_actividades_dias(ActividadesOrdenadas, MaxDias, Categoria, [], Itinerario).
+/*****Nombre****************************************
+ * generar_itinerario_aux
+ *****Descripción***********************************
+ * Filtra las actividades por la categoría preferida y genera un
+ * itinerario asegurándose de que no exceda la duración máxima.
+ *****Parámetros************************************
+ * DuracionMax - La duración máxima permitida para el itinerario.
+ * CategoriaPreferida - La categoría de actividades que el usuario prefiere.
+ * Itinerario - Lista que contendrá las actividades seleccionadas.
+ * DuracionTotal - Duración total de las actividades seleccionadas en el itinerario.
+ *****Retorno***************************************
+ * No retorna un valor; produce una lista de actividades y su duración total.
+ ***************************************************/
+% Predicado principal para generar itinerario con actividades de la categoría preferida
+generar_itinerario_aux(DuracionMax, CategoriaPreferida, Itinerario, DuracionTotal) :-
+    % Obtener todas las actividades de la categoría preferida
+    findall((Actividad, Duracion), 
+            (actividad(Actividad, _, Duracion, _, Categorias),
+             member(CategoriaPreferida, Categorias)),
+            ActividadesFiltradas),
+    
+    % Generar el itinerario asegurando que no exceda la duración maxima
+    seleccionar_actividades(DuracionMax, ActividadesFiltradas, Itinerario, DuracionTotal).
 
-/*-------------------------------------------------------------*/
+/*****Nombre****************************************
+ * seleccionar_actividades
+ *****Descripción***********************************
+ * Selecciona actividades de una lista dada sin exceder la duración máxima.
+ *****Parámetros************************************
+ * DuracionMax - La duración máxima permitida para el itinerario.
+ * ActividadesFiltradas - Lista de actividades filtradas según la categoría.
+ * Itinerario - Lista que contendrá las actividades seleccionadas.
+ * DuracionTotal - Duración total de las actividades seleccionadas en el itinerario.
+ *****Retorno***************************************
+ * No retorna un valor; produce un itinerario y su duración total.
+ ***************************************************/
+seleccionar_actividades(_, [], [], 0).
+seleccionar_actividades(DuracionMax, [(Actividad, Duracion)|Resto], [Actividad|Itinerario], DuracionTotal) :-
+    Duracion =< DuracionMax,
+    DuracionRestante is DuracionMax - Duracion,
+    seleccionar_actividades(DuracionRestante, Resto, Itinerario, DuracionTotalRestante),
+    DuracionTotal is Duracion + DuracionTotalRestante.
+seleccionar_actividades(DuracionMax, [_|Resto], Itinerario, DuracionTotal) :-
+    seleccionar_actividades(DuracionMax, Resto, Itinerario, DuracionTotal).
+
+/*****Nombre****************************************
+ * preguntar_satisfaccion
+ *****Descripción***********************************
+ * Pregunta al usuario si está satisfecho con el itinerario generado.
+ * Si el usuario no está satisfecho, genera un nuevo itinerario con
+ * una categoría afín.
+ *****Parámetros************************************
+ * DuracionTotal - Duración total del itinerario generado.
+ * CategoriaPreferida - La categoría de actividades preferida por el usuario.
+ *****Retorno***************************************
+ * No retorna un valor; maneja la interacción con el usuario.
+ ***************************************************/
+preguntar_satisfaccion(DuracionTotal, CategoriaPreferida) :-
+    write('Esta satisfecho con este itinerario? (s/n): '),
+    read(Satisfaccion),
+    (Satisfaccion == s ->
+        write('Genial. Disfrute de su itinerario de actividades.'), nl
+    ; 
+        write('Generando un nuevo itinerario con categoria afin...'), nl,
+        generar_itinerario_con_categoria_afina(DuracionTotal, CategoriaPreferida)
+    ).
+
+/*****Nombre****************************************
+ * generar_itinerario_con_categoria_afina
+ *****Descripción***********************************
+ * Genera un nuevo itinerario basado en una categoría afín a la
+ * categoría preferida del usuario si no está satisfecho con el itinerario
+ * original.
+ *****Parámetros************************************
+ * DuracionMax - La duración máxima permitida para el nuevo itinerario.
+ * CategoriaPreferida - La categoría de actividades que el usuario prefiere.
+ *****Retorno***************************************
+ * No retorna un valor; produce un nuevo itinerario basado en la categoría afín.
+ ***************************************************/
+generar_itinerario_con_categoria_afina(DuracionMax, CategoriaPreferida) :-
+    % Obtener la categoría afin
+    afinidad(CategoriaPreferida, CategoriaAfina),
+    write('Categoria afin: '), write(CategoriaAfina), nl,
+    generar_itinerario_aux(DuracionMax, CategoriaAfina, ItinerarioAfina, DuracionTotalAfina),
+    write('Itinerario afin sugerido:'), nl,
+    mostrar_itinerario(ItinerarioAfina),
+    write('Duracion total del itinerario: '), write(DuracionTotalAfina), write(' dias'), nl, nl.
+
+/*****Nombre****************************************
+ * mostrar_itinerario
+ *****Descripción***********************************
+ * Muestra las actividades incluidas en el itinerario generado.
+ *****Parámetros************************************
+ * Itinerario - Lista de actividades que se mostrarán al usuario.
+ *****Retorno***************************************
+ * No retorna un valor; solo imprime las actividades en la salida estándar.
+ ***************************************************/
+mostrar_itinerario([]).
+mostrar_itinerario([Actividad|Resto]) :-
+    write('  - Actividad: '), write(Actividad), nl,
+    mostrar_itinerario(Resto).
 
 /*****Nombre****************************************
  * estadistica
@@ -528,6 +616,7 @@ actividades_por_tipo_menu :-
         menu  % Regresar al menú después de sugerir
     ).
 */
+
 % Predicado para mostrar actividades por tipo
 % actividades_por_tipo/1
 % Busca y muestra todas las actividades de un tipo específico.

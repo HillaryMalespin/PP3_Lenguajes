@@ -130,15 +130,6 @@ solicitar_descripcion_actividad(Descripcion) :-
         solicitar_descripcion_actividad(Descripcion)
     ).
 
-solicitar_frase(Frase) :-
-    write('Ingrese una frase para recomendar actividades: (cadena): '), nl,
-    read_line_to_string(Input),
-    (   validar_string(Input) ->
-        Frase = Input
-    ;   write('Error: La frase debe ser una cadena.'), nl,
-        solicitar_frase(Frase)
-    ).
-
 /*****Nombre****************************************
  * solicitar_tipos
  *****Descripción***********************************
@@ -172,11 +163,11 @@ solicitar_tipos(Tipos) :-
  * ingresada a `Categoria` para su uso posterior.
  ***************************************************/
 solicitar_categoria(Categoria) :-
-    write('Ingrese la categoria de preferencia (como una cadena): '), nl,
+    write('Ingrese la categoria de preferencia (como un atomo): '), nl,
     read(Input),
-    (   validar_string(Input) ->
+    (   validar_atomo(Input) ->
         Categoria = Input
-    ;   write('Error: La categoria debe ser una cadena.'), nl,
+    ;   write('Error: La categoria debe ser un atomo.'), nl,
         solicitar_categoria(Categoria)
     ).
 

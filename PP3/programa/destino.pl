@@ -9,3 +9,4 @@ destino(barcelona, 'Ciudad de Gaudi').
 destino(limon, 'Siquirres').
 destino(san_jose, 'capital').
 destino(siquirres, 'corazon de limon').
+destino(limon_centro, 'Provincia costera').
