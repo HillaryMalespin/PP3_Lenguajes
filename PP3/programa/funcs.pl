@@ -306,6 +306,9 @@ mostrar_itinerario([Actividad|Resto]) :-
  * No retorna un valor; llama a otras funciones que muestran resultados en la salida estándar.
  ***************************************************/
 estadistica :-
+    consult('actividad.pl'),
+    consult('destino.pl'),
+    consult('destino_actividad.pl'),
     estadistica_ciudades, nl,
     estadistica_actividad_costo, nl,
     estadistica_actividad_duracion, nl,
