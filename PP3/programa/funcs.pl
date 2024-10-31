@@ -738,6 +738,7 @@ generar_itinerario_aux_monto(MontoMaximo, CategoriaPreferida, CantidadPersonas, 
     % Generar el itinerario asegurando que no exceda el monto maximo
     seleccionar_actividades_monto(MontoMaximo, ActividadesFiltradas, CantidadPersonas, OpcionEstancia, Itinerario, CostoTotal).
 
+
 /*****Nombre****************************************
  * seleccionar_actividades_monto
  *****Descripción***********************************
@@ -753,8 +754,8 @@ generar_itinerario_aux_monto(MontoMaximo, CategoriaPreferida, CantidadPersonas, 
  * No retorna un valor; produce un itinerario y su costo total.
  ***************************************************/
 seleccionar_actividades_monto(_, [], _, _, [], 0).  % Caso base: sin actividades
-seleccionar_actividades_monto(MontoMaximo, [(Actividad, Costo, Duracion, Descripcion, Tipos)|Resto], CantidadPersonas, OpcionEstancia, 
-    [Actividad|Itinerario], CostoTotal) :-
+seleccionar_actividades_monto(MontoMaximo, [(Actividad, Costo, Duracion, _, _)|Resto], CantidadPersonas, OpcionEstancia, 
+    [Actividad|Itinerario], CostoTotal) :- 
     CostoTotalActividades is Costo * CantidadPersonas,
     CostoTotalActividades =< MontoMaximo,
     (OpcionEstancia = largo -> Duracion >= 2; Duracion < 2),
@@ -801,10 +802,9 @@ generar_itinerario_con_categoria_afina_monto(CostoMaximo, CategoriaPreferida) :-
     % Obtener la categoría afín
     afinidad(CategoriaPreferida, CategoriaAfina),
     write('Categoría afín: '), write(CategoriaAfina), nl,
-    generar_itinerario_aux_monto(CostoMaximo, CategoriaAfina, CantidadPersonas, OpcionEstancia, ItinerarioAfina, CostoTotalAfina),
+    generar_itinerario_aux_monto(CostoMaximo, CategoriaAfina, _CantidadPersonas, _OpcionEstancia, ItinerarioAfina, CostoTotalAfina),
     write('Itinerario afín sugerido:'), nl,
     mostrar_itinerario(ItinerarioAfina),
     write('Costo total del itinerario: $'), write(CostoTotalAfina), nl, nl.
-
 
 
