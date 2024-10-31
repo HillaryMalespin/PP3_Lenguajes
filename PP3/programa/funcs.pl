@@ -817,3 +817,135 @@ mostrar_resultados(Actividades) :-
  ***************************************************/
 articulo(X) :- member(X, ['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'de', 'en', 'a', 'y', 'o']).
 
+
+/*
+--------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------Generar-itinerario-por-monto----------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+*/
+
+/*****Nombre****************************************
+ * generar_itinerario_por_monto
+ *****Descripción***********************************
+ * Carga las actividades desde un archivo, solicita al usuario
+ * el monto máximo, la categoría preferida, la cantidad de personas
+ * y la preferencia de estancia, generando un itinerario
+ * basado en esos parámetros. También pregunta al usuario si está
+ * satisfecho con el itinerario generado.
+ *****Parámetros************************************
+ * No tiene parámetros.
+ *****Retorno***************************************
+ * No retorna un valor; llama a otras funciones que muestran resultados en
+ * la salida estándar y gestiona la interacción con el usuario.
+ ***************************************************/
+generar_itinerario_por_monto :- 
+    consult('actividad.pl'),
+    write('Ingrese el monto maximo que dispone: '),
+    read(MontoMaximo),
+    write('Ingrese la categoria de preferencia: '),
+    read(CategoriaPreferida),
+    write('Ingrese la cantidad de personas: '),
+    read(CantidadPersonas), 
+    write('¿Prefiere estancias largas o cortas? (largo/corto): '),
+    read(OpcionEstancia),  
+    generar_itinerario_aux_monto(MontoMaximo, CategoriaPreferida, CantidadPersonas, OpcionEstancia, Itinerario, CostoTotal),
+    write('Itinerario sugerido:'), nl,
+    mostrar_itinerario(Itinerario),
+    write('Costo total del itinerario: $'), write(CostoTotal), nl, nl,
+    preguntar_satisfaccion(CostoTotal).
+
+/*****Nombre****************************************
+ * generar_itinerario_aux_monto
+ *****Descripción***********************************
+ * Filtra las actividades por la categoría preferida y genera un
+ * itinerario asegurándose de que no exceda el monto máximo.
+ *****Parámetros************************************
+ * MontoMaximo - El monto máximo permitido para el itinerario.
+ * CategoriaPreferida - La categoría de actividades que el usuario prefiere.
+ * CantidadPersonas - Cantidad de personas que realizará las actividades.
+ * OpcionEstancia - Preferencia de estancia (larga o corta).
+ * Itinerario - Lista que contendrá las actividades seleccionadas.
+ * CostoTotal - Costo total de las actividades seleccionadas en el itinerario.
+ *****Retorno***************************************
+ * No retorna un valor; produce una lista de actividades y su costo total.
+ ***************************************************/
+generar_itinerario_aux_monto(MontoMaximo, CategoriaPreferida, CantidadPersonas, OpcionEstancia, Itinerario, CostoTotal) :-
+    % Obtener todas las actividades de la categoría preferida
+    findall((Actividad, Costo, Duracion, Descripcion, Tipos),
+            (actividad(Actividad, Costo, Duracion, Descripcion, Tipos),
+             member(CategoriaPreferida, Tipos)),
+            ActividadesFiltradas),
+    
+    % Generar el itinerario asegurando que no exceda el monto maximo
+    seleccionar_actividades_monto(MontoMaximo, ActividadesFiltradas, CantidadPersonas, OpcionEstancia, Itinerario, CostoTotal).
+
+/*****Nombre****************************************
+ * seleccionar_actividades_monto
+ *****Descripción***********************************
+ * Selecciona actividades de una lista dada sin exceder el monto maximo.
+ *****Parametros************************************
+ * MontoMaximo - El monto maximo permitido para el itinerario.
+ * ActividadesFiltradas - Lista de actividades filtradas según la categoría.
+ * CantidadPersonas - Cantidad de personas que realizara las actividades.
+ * OpcionEstancia - Preferencia de estancia (larga o corta).
+ * Itinerario - Lista que contendra las actividades seleccionadas.
+ * CostoTotal - Costo total de las actividades seleccionadas en el itinerario.
+ *****Retorno***************************************
+ * No retorna un valor; produce un itinerario y su costo total.
+ ***************************************************/
+seleccionar_actividades_monto(_, [], _, _, [], 0).  % Caso base: sin actividades
+seleccionar_actividades_monto(MontoMaximo, [(Actividad, Costo, Duracion, Descripcion, Tipos)|Resto], CantidadPersonas, OpcionEstancia, 
+    [Actividad|Itinerario], CostoTotal) :-
+    CostoTotalActividades is Costo * CantidadPersonas,
+    CostoTotalActividades =< MontoMaximo,
+    (OpcionEstancia = largo -> Duracion >= 2; Duracion < 2),
+    MontoRestante is MontoMaximo - CostoTotalActividades,
+    seleccionar_actividades_monto(MontoRestante, Resto, CantidadPersonas, OpcionEstancia, Itinerario, CostoTotalRestante),
+    CostoTotal is CostoTotalActividades + CostoTotalRestante.
+seleccionar_actividades_monto(MontoMaximo, [_|Resto], CantidadPersonas, OpcionEstancia, Itinerario, CostoTotal) :-
+    seleccionar_actividades_monto(MontoMaximo, Resto, CantidadPersonas, OpcionEstancia, Itinerario, CostoTotal).
+
+/*****Nombre****************************************
+ * preguntar_satisfaccion
+ *****Descripción***********************************
+ * Pregunta al usuario si esta satisfecho con el itinerario generado.
+ * Si el usuario no esta satisfecho, genera un nuevo itinerario con
+ * una categoría afín.
+ *****Parametros************************************
+ * CostoTotal - Costo total del itinerario generado.
+ *****Retorno***************************************
+ * No retorna un valor; maneja la interacción con el usuario.
+ ***************************************************/
+preguntar_satisfaccion(CostoTotal) :-
+    write('Esta satisfecho con este itinerario? (s/n): '),
+    read(Satisfaccion),
+    (Satisfaccion == s ->
+        write('Genial. Disfrute de su itinerario de actividades.'), nl
+    ; 
+        write('Generando un nuevo itinerario con categoria afin...'), nl,
+        generar_itinerario_con_categoria_afina_monto(CostoTotal)
+    ).
+
+/*****Nombre****************************************
+ * generar_itinerario_con_categoria_afina
+ *****Descripción***********************************
+ * Genera un nuevo itinerario basado en una categoría afín a la
+ * categoría preferida del usuario si no esta satisfecho con el itinerario
+ * original.
+ *****Parametros************************************
+ * CostoMaximo - El costo maximo permitido para el nuevo itinerario.
+ * CategoriaPreferida - La categoria de actividades que el usuario prefiere.
+ *****Retorno***************************************
+ * No retorna un valor; produce un nuevo itinerario basado en la categoria afin.
+ ***************************************************/
+generar_itinerario_con_categoria_afina_monto(CostoMaximo, CategoriaPreferida) :-
+    % Obtener la categoría afín
+    afinidad(CategoriaPreferida, CategoriaAfina),
+    write('Categoría afín: '), write(CategoriaAfina), nl,
+    generar_itinerario_aux_monto(CostoMaximo, CategoriaAfina, CantidadPersonas, OpcionEstancia, ItinerarioAfina, CostoTotalAfina),
+    write('Itinerario afín sugerido:'), nl,
+    mostrar_itinerario(ItinerarioAfina),
+    write('Costo total del itinerario: $'), write(CostoTotalAfina), nl, nl.
+
+
+
